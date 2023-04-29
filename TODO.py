@@ -26,7 +26,7 @@ def main():
     todo_list: list[Todo]
     try:
         todo_list = read_todos()
-    except EOFError:
+    except (EOFError, FileNotFoundError):
         todo_list = []
 
     args = sys.argv
@@ -54,8 +54,16 @@ def main():
                 todo_list[int(args[2])-1].is_finished = True
                 write_todo(todo_list)
 
-            # case 'clear':
-            #     pass
+            case 'clear':
+                if args[2] == 'all':
+                    todo_list = []
+
+                else:
+                    for todo in todo_list:
+                        if todo.is_finished:
+                            todo_list.remove(todo)
+                
+                write_todo(todo_list)
 
             case other:
                 print('Invalid TODO command =>', command)
