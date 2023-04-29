@@ -1,11 +1,15 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 import pickle
 import sys
 
 PATH = 'todos.pkl'
 VALID_ARGS = ['new', 'list', 'list all', 'list finished', 'done']
 DATE_FORMAT = '%d/%m/%Y'
+MEDIA, ALTA ='\033[33m', '\033[31m'
+DIAS_PARA_AVERMELHAR = 5
+RESET = '\033[0m'
+
 @dataclass
 class Todo:
     name_todo: str
@@ -13,13 +17,25 @@ class Todo:
     dead_line: datetime = None
     is_finished: bool = False
     finish_date: datetime = None
+    index_of_todo: int = 0
 
     def __repr__(self) -> str:
         todo_str: str = ""
-        todo_str += f'{self.name_todo} -'
-        todo_str += f' S: {format_date(self.start_date)}'
-        todo_str += f' F: {format_date(self.finish_date)}'
-        todo_str += f' DL: {format_date(self.dead_line)}'
+
+        if self.dead_line and datetime.now() > self.dead_line:
+            day_passed = (datetime.now() - self.dead_line).days
+            if day_passed < DIAS_PARA_AVERMELHAR:
+                todo_str += MEDIA
+            elif day_passed > DIAS_PARA_AVERMELHAR:
+                todo_str += ALTA
+
+        todo_str += f'[{"X" if self.is_finished else " "}] ' # [ ]
+        todo_str += f'{self.index_of_todo} => '              # 1 => 
+        todo_str += f'{self.name_todo} -'                    # name - 
+        todo_str += f' S: {format_date(self.start_date)}'    # S: 
+        todo_str += f' F: {format_date(self.finish_date)}'   # F:
+        todo_str += f' DL: {format_date(self.dead_line)}'    # DL:
+        todo_str += RESET
         return todo_str
 
 
@@ -30,92 +46,95 @@ def main():
     except (EOFError, FileNotFoundError):
         todo_list = []
 
+    clear_args(sys.argv)
     args = sys.argv
-    clear_args(args)
-
     len_args = len(args)
-    if len_args > 1:
-        command = args[1]
-        match command:
-            case 'new':
+    # print(args)
+
+    if len_args == 1:
+        print('commandos =>', VALID_ARGS)
+        return 
+
+    command = args[1]
+    match command:
+        case 'new':
+            try:
+
                 if len_args == 3:
-                     todo = Todo(args[2], # name
-                                datetime.now()) # start date
+                    todo = Todo(args[2], # name
+                                datetime.now(),
+                                index_of_todo=len(todo_list)) # start date
+                
+                elif len_args == 4:
+                    todo = Todo(args[2], # name
+                                datetime.strptime(args[3], DATE_FORMAT),
+                                index_of_todo=len(todo_list)) # start date
+
                 else:                
-                    try:
                         todo = Todo(args[2], # name
                                     datetime.strptime(args[3], DATE_FORMAT), # start date
-                                    datetime.strptime(args[4], DATE_FORMAT)) # dead line 
-                    except ValueError:
-                        print("Formato => todo new 'nome do todo' 'DD/MM/YYYY' 'DD/MM/YYYY' ")
-                        return 
-                        
-                todo_list.append(todo)
-                write_todo(todo_list)
-                print("TODO criado!")
+                                    datetime.strptime(args[4], DATE_FORMAT),
+                                    index_of_todo=len(todo_list)) # dead line 
 
-            case 'list':
-                for i, todo in enumerate(todo_list):
-                    if len_args < 3:
-                        print_unfinished(todo, i)
+            except ValueError:
+                print("Formato => todo new 'nome do todo' 'DD/MM/YYYY' 'DD/MM/YYYY'")
+                return 
                     
-                    elif args[2] == 'all':
-                        print_all(todo, i)
+            todo_list.append(todo)
+            write_todo(todo_list)
+            print("TODO criado!")
 
-                    elif args[2] == 'finished':
-                        print_finished(todo, i)
-
-            case 'done':
-                done_todo = todo_list[int(args[2])-1]
-                done_todo.is_finished = not done_todo.is_finished
-                                
-                if done_todo.is_finished:
-                    if len_args > 3:
-                        done_todo.finish_date = datetime.strptime(args[3], DATE_FORMAT)
-                    else:
-                        done_todo.finish_date = datetime.now()
-                    
-                    print_finished(done_todo, int(args[2])-1)
-                else:
-                    done_todo.finish_date = None
-                    print_unfinished(done_todo, int(args[2])-1)
+        case 'list':
+            for todo in todo_list:
+                if len_args < 3:
+                    if not todo.is_finished:
+                        print(todo)
                 
-                write_todo(todo_list)
+                elif args[2] == 'finished':
+                    if todo.is_finished:
+                        print(todo)
 
-            case 'clear':
-                if len_args > 2:
-                    if args[2] == 'all':
-                        todo_list = []
-                    else:
-                        print("Invalid clear command =>", args[2])
+                elif args[2] == 'all':
+                    print(todo)
 
+
+        case 'done':
+            done_todo = todo_list[int(args[2])]
+            done_todo.is_finished = not done_todo.is_finished
+                            
+            if done_todo.is_finished:
+                if len_args > 3:
+                    done_todo.finish_date = datetime.strptime(args[3], DATE_FORMAT)
                 else:
-                    for todo in todo_list:
-                        if todo.is_finished:
-                            todo_list.remove(todo)
+                    done_todo.finish_date = datetime.now()
                 
-                write_todo(todo_list)
+                print(done_todo)
+            else:
+                done_todo.finish_date = None
+                print(done_todo)
+            
+            write_todo(todo_list)
 
-            case other:
-                print('Invalid TODO command =>', command)
+        case 'clear':
+            if len_args > 2:
+                if args[2] == 'all':
+                    todo_list = []
+                else:
+                    print("Invalid clear command =>", args[2])
+
+            else:
+                for todo in todo_list:
+                    if todo.is_finished:
+                        todo_list.remove(todo)
+            
+            write_todo(todo_list)
+
+        case other:
+            print('Invalid TODO command =>', command)
 
 def clear_args(args):
-    if args[2] == '':
-        args.pop(2)
-
-def print_finished(todo, i):
-    if todo.is_finished:
-        print(f'[X] {i+1} => {todo}')
-
-def print_all(todo, i):
-    if todo.is_finished:
-        print(f'[X] {i+1} => {todo}')
-    else:
-        print(f'[ ] {i+1} => {todo}')
-
-def print_unfinished(todo, i):
-    if not todo.is_finished:
-        print(f'[ ] {i+1} => {todo}')
+    if '' in args:
+        args.remove('')
 
 def read_todos() -> list[str]:
     with open(PATH, 'rb') as f:
