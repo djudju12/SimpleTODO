@@ -85,35 +85,33 @@ def main():
             print("TODO criado!")
 
         case 'list':
-            for todo in todo_list:
-                if len_args < 3:
-                    if not todo.is_finished:
-                        print(todo)
-                
-                elif args[2] == 'finished':
-                    if todo.is_finished:
-                        print(todo)
-
-                elif args[2] == 'all':
-                    print(todo)
-
+            if len_args < 3:
+                print_todos(todo_list, 'unfinished')
+            else:
+                print_todos(todo_list, args[2])
 
         case 'done':
-            done_todo = todo_list[int(args[2])]
-            done_todo.is_finished = not done_todo.is_finished
-                            
-            if done_todo.is_finished:
-                if len_args > 3:
-                    done_todo.finish_date = datetime.strptime(args[3], DATE_FORMAT)
+            try:
+                done_todo = todo_list[int(args[2])]
+                done_todo.is_finished = not done_todo.is_finished
+                                
+                if done_todo.is_finished:
+                    if len_args > 3:
+                        done_todo.finish_date = datetime.strptime(args[3], DATE_FORMAT)
+                    else:
+                        done_todo.finish_date = datetime.now()
+                    
+                    print(done_todo)
                 else:
-                    done_todo.finish_date = datetime.now()
+                    done_todo.finish_date = None
+                    print(done_todo)
                 
-                print(done_todo)
-            else:
-                done_todo.finish_date = None
-                print(done_todo)
-            
-            write_todo(todo_list)
+                write_todo(todo_list)
+            except IndexError:
+                print('Not a valid todo index =>', args[2])
+            except ValueError:
+                print('Invalid todo index =>', args[2])
+                print('Check "todo list all" to get the index', args[2])
 
         case 'clear':
             if len_args > 2:
@@ -131,6 +129,23 @@ def main():
 
         case other:
             print('Invalid TODO command =>', command)
+
+def print_todos(todo_list, m):
+    for todo in todo_list:
+        match m:
+            case 'finished':
+                if todo.is_finished:
+                    print(todo)
+
+            case 'all':
+                print(todo)
+
+            case 'unfinished':
+                if not todo.is_finished:
+                    print(todo)
+
+            case other:
+                print('invalid argument PRINT_TODOS =>', m)
 
 def clear_args(args):
     if '' in args:
