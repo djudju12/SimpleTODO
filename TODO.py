@@ -87,6 +87,7 @@ def main():
         case 'list':
             if len_args < 3:
                 print_todos(todo_list, 'unfinished')
+
             else:
                 print_todos(todo_list, args[2])
 
@@ -98,9 +99,10 @@ def main():
                 if done_todo.is_finished:
                     if len_args > 3:
                         done_todo.finish_date = datetime.strptime(args[3], DATE_FORMAT)
+
                     else:
                         done_todo.finish_date = datetime.now()
-                    
+
                     print(done_todo)
                 else:
                     done_todo.finish_date = None
@@ -126,6 +128,9 @@ def main():
                         todo_list.remove(todo)
             
             write_todo(todo_list)
+
+        case 'help':
+            print('check => https://github.com/djudju12/SimpleTODO')
 
         case other:
             print('Invalid TODO command =>', command)
