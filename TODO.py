@@ -9,19 +9,20 @@ DATE_FORMAT = '%d/%m/%Y'
 @dataclass
 class Todo:
     name_todo: str
-    start_date: datetime
-    dead_line: datetime
+    start_date: datetime 
+    dead_line: datetime = None
     is_finished: bool = False
     finish_date: datetime = None
 
     def __repr__(self) -> str:
         todo_str: str = ""
         todo_str += f'{self.name_todo} -'
-        todo_str += f' S: {self.start_date.strftime(DATE_FORMAT)}'
-        todo_str += f' F: {self.finish_date.strftime(DATE_FORMAT) if self.finish_date else "~".center(10)}'
-        todo_str += f' DL: {self.dead_line.strftime(DATE_FORMAT)}'
+        todo_str += f' S: {format_date(self.start_date)}'
+        todo_str += f' F: {format_date(self.finish_date)}'
+        todo_str += f' DL: {format_date(self.dead_line)}'
         return todo_str
-    
+
+
 def main():
     todo_list: list[Todo]
     try:
@@ -30,18 +31,32 @@ def main():
         todo_list = []
 
     args = sys.argv
-    if len(args) > 1:
+    clear_args(args)
+
+    len_args = len(args)
+    if len_args > 1:
         command = args[1]
         match command:
             case 'new':
-                todo = Todo(args[2], datetime.strptime(args[3], DATE_FORMAT), datetime.strptime(args[4], DATE_FORMAT))   
+                if len_args == 3:
+                     todo = Todo(args[2], # name
+                                datetime.now()) # start date
+                else:                
+                    try:
+                        todo = Todo(args[2], # name
+                                    datetime.strptime(args[3], DATE_FORMAT), # start date
+                                    datetime.strptime(args[4], DATE_FORMAT)) # dead line 
+                    except ValueError:
+                        print("Formato => todo new 'nome do todo' 'DD/MM/YYYY' 'DD/MM/YYYY' ")
+                        return 
+                        
                 todo_list.append(todo)
                 write_todo(todo_list)
                 print("TODO criado!")
-          
+
             case 'list':
                 for i, todo in enumerate(todo_list):
-                    if len(args) < 3:
+                    if len_args < 3:
                         print_unfinished(todo, i)
                     
                     elif args[2] == 'all':
@@ -51,12 +66,28 @@ def main():
                         print_finished(todo, i)
 
             case 'done':
-                todo_list[int(args[2])-1].is_finished = True
+                done_todo = todo_list[int(args[2])-1]
+                done_todo.is_finished = not done_todo.is_finished
+                                
+                if done_todo.is_finished:
+                    if len_args > 3:
+                        done_todo.finish_date = datetime.strptime(args[3], DATE_FORMAT)
+                    else:
+                        done_todo.finish_date = datetime.now()
+                    
+                    print_finished(done_todo, int(args[2])-1)
+                else:
+                    done_todo.finish_date = None
+                    print_unfinished(done_todo, int(args[2])-1)
+                
                 write_todo(todo_list)
 
             case 'clear':
-                if args[2] == 'all':
-                    todo_list = []
+                if len_args > 2:
+                    if args[2] == 'all':
+                        todo_list = []
+                    else:
+                        print("Invalid clear command =>", args[2])
 
                 else:
                     for todo in todo_list:
@@ -67,6 +98,10 @@ def main():
 
             case other:
                 print('Invalid TODO command =>', command)
+
+def clear_args(args):
+    if args[2] == '':
+        args.pop(2)
 
 def print_finished(todo, i):
     if todo.is_finished:
@@ -86,12 +121,14 @@ def read_todos() -> list[str]:
     with open(PATH, 'rb') as f:
         return pickle.load(f)
     
-    
-
 def write_todo(o: list[Todo]) -> list[str]:
     with open(PATH, 'wb') as f:
         pickle.dump(o, f)    
-    
-            
+
+def format_date(date: datetime):
+    if date:
+        return date.strftime(DATE_FORMAT)
+    return "~~/~~/~~~~"
+
 if __name__ == '__main__':
     main()
