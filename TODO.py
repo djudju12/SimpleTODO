@@ -24,10 +24,7 @@ class Todo:
 
         if self.dead_line and datetime.now() > self.dead_line:
             day_passed = (datetime.now() - self.dead_line).days
-            if day_passed < DIAS_PARA_AVERMELHAR:
-                todo_str += MEDIA
-            elif day_passed > DIAS_PARA_AVERMELHAR:
-                todo_str += ALTA
+            todo_str += MEDIA if day_passed < DIAS_PARA_AVERMELHAR else ALTA
 
         todo_str += f'[{"X" if self.is_finished else " "}] ' # [ ]
         todo_str += f'{self.index_of_todo} => '              # 1 => 
