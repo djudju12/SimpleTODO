@@ -46,7 +46,6 @@ def main():
     clear_args(sys.argv)
     args = sys.argv
     len_args = len(args)
-    # print(args)
 
     if len_args == 1:
         print('commandos =>', VALID_ARGS)
