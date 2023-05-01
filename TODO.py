@@ -3,7 +3,7 @@ from datetime import datetime
 import pickle
 import sys
 
-PATH = 'todos.pkl'
+PATH = r'/home/jonathan/programacao/SimpleTODO/todos.pkl'
 VALID_ARGS = ['new', 'list', 'list all', 'list finished', 'done']
 DATE_FORMAT = '%d/%m/%Y'
 MEDIA, ALTA ='\033[33m', '\033[31m'
