@@ -3,7 +3,7 @@ from datetime import datetime
 import pickle
 import sys
 
-PATH = r'/home/jonathan/programacao/SimpleTODO/todos.pkl'
+PATH = r'C:\USERS\jonathan.santos\Desktop\unisc\SimpleTODO\todos.pkl'
 VALID_ARGS = ['new', 'list', 'list all', 'list finished', 'done']
 DATE_FORMAT = '%d/%m/%Y'
 MEDIA, ALTA ='\033[33m', '\033[31m'
@@ -119,9 +119,7 @@ def main():
                     print("Invalid clear command =>", args[2])
 
             else:
-                for todo in todo_list:
-                    if todo.is_finished:
-                        todo_list.remove(todo)
+                clear_todos(todo_list)
             
             write_todo(todo_list)
 
@@ -130,6 +128,15 @@ def main():
 
         case other:
             print('Invalid TODO command =>', command)
+
+def clear_todos(todo_list: list[Todo]):
+    contador = 0
+    for todo in todo_list.copy():
+        if todo.is_finished:
+            todo_list.remove(todo)
+        else:
+            todo.index_of_todo = contador   
+            contador +=1
 
 def print_todos(todo_list, m):
     for todo in todo_list:
