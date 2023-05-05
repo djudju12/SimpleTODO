@@ -2,13 +2,16 @@ from dataclasses import dataclass
 from datetime import datetime
 import pickle
 import sys
+from types import NoneType
 
 PATH = r'C:\USERS\jonathan.santos\Desktop\unisc\SimpleTODO\todos.pkl'
 VALID_ARGS = ['new', 'list', 'list all', 'list finished', 'done']
 DATE_FORMAT = '%d/%m/%Y'
 MEDIA, ALTA ='\033[33m', '\033[31m'
-DIAS_PARA_AVERMELHAR = 5
 RESET = '\033[0m'
+DIAS_PARA_AVERMELHAR = 5
+
+void = NoneType
 
 @dataclass
 class Todo:
@@ -36,7 +39,7 @@ class Todo:
         return todo_str
 
 
-def main():
+def main() -> void:
     todo_list: list[Todo]
     try:
         todo_list = read_todos()
@@ -129,7 +132,7 @@ def main():
         case other:
             print('Invalid TODO command =>', command)
 
-def clear_todos(todo_list: list[Todo]):
+def clear_todos(todo_list: list[Todo]) -> void:
     contador = 0
     for todo in todo_list.copy():
         if todo.is_finished:
@@ -138,7 +141,7 @@ def clear_todos(todo_list: list[Todo]):
             todo.index_of_todo = contador   
             contador +=1
 
-def print_todos(todo_list, m):
+def print_todos(todo_list: list[Todo], m: str) -> void:
     for todo in todo_list:
         match m:
             case 'finished':
@@ -155,7 +158,7 @@ def print_todos(todo_list, m):
             case other:
                 print('invalid argument PRINT_TODOS =>', m)
 
-def clear_args(args):
+def clear_args(args: str) -> void:
     if '' in args:
         args.remove('')
 
@@ -167,7 +170,7 @@ def write_todo(o: list[Todo]) -> list[str]:
     with open(PATH, 'wb') as f:
         pickle.dump(o, f)    
 
-def format_date(date: datetime):
+def format_date(date: datetime) -> str:
     if date:
         return date.strftime(DATE_FORMAT)
     return "~~/~~/~~~~"
